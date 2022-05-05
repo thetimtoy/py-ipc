@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 __title__ = 'ipc'
 __author__ = 'thetimtoy'
 __version__ = '0.1.0'
@@ -43,7 +41,6 @@ setup_lazy_imports(
 )
 
 del (
-    annotations,
     TYPE_CHECKING,
     setup_lazy_imports,
 )

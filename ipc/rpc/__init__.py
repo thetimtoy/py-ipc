@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from ipc.core.utils import setup_lazy_imports
@@ -46,6 +44,5 @@ setup_lazy_imports(
 
 del (
     TYPE_CHECKING,
-    annotations,
     setup_lazy_imports,
 )
