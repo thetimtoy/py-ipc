@@ -46,7 +46,7 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
 
         self.commands = {}
 
-        for _, v in getmembers(self, lambda o: isinstance(o, Command)):
+        for _, v in getmembers(type(self), lambda o: isinstance(o, Command)):
             v: Command
 
             v._server = self
@@ -105,20 +105,20 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
 
             def decorator(func):
                 nonlocal command
-                
+
                 if isinstance(command, str):
                     name = command
                 else:
                     name = func.__name__
 
                 command = Command(func=func, name=name)
-                
+
                 self.add_command(command)
 
                 return command
 
             return decorator
-        
+
         command = Command(func=command)
 
         self.add_command(command)
