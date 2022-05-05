@@ -1,0 +1,25 @@
+[tool.black]
+line-length = 90
+target-version = ['py37']
+skip-string-normalization = true
+
+[tool.pyright]
+include = ['ipc/**']
+pythonVersion = "3.7"
+
+[tool.poetry]
+name = "py-ipc"
+version = "0.1.0"
+description = ""
+authors = ["Tinoy Thomas <tinoytpm1@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+orjson = { version = "^3.6.8", optional = true }
+
+[tool.poetry.extras]
+optional = ['orjson']
+
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,14 @@
+# Mypy
+.mypy_cache
+
+# Build
+build
+dist
+*.egg-info
+
+# Venv
+.venv
+venv
+
+# Python
+__pycache__
