@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from asyncio import get_running_loop
 from inspect import isawaitable
 from typing import TYPE_CHECKING
