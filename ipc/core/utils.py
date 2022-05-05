@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
 
 from asyncio import get_running_loop
 from inspect import isawaitable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from asyncio import (
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
         Type,
         TypeVar,
         Union,
+        overload,
     )
     from typing_extensions import Self
 
