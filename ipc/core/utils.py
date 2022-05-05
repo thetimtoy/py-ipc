@@ -3,10 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, overload
 
 from asyncio import get_running_loop
-from distutils.util import strtobool
-from importlib import import_module
 from inspect import isawaitable
-from os import environ
 
 if TYPE_CHECKING:
     from asyncio import (
@@ -18,10 +15,8 @@ if TYPE_CHECKING:
         Awaitable,
         Callable,
         Coroutine,
-        Dict,
         Generic,
         Optional,
-        Sequence,
         Type,
         TypeVar,
         Union,
@@ -36,7 +31,6 @@ __all__ = (
     'json_loads',
     'future',
     'task',
-    'setup_lazy_imports',
     'maybe_awaitable',
     'NULL',
 )
@@ -69,63 +63,6 @@ def future() -> Future[Any]:
 
 def task(coro: Coroutine[Any, Any, T]) -> Task[T]:
     return get_running_loop().create_task(coro)
-
-
-def setup_lazy_imports(
-    ns: Dict[str, Any],
-    _exported: Dict[Union[str, Sequence[str]], Union[Dict[str, str], str]],
-) -> None:
-    exported: Dict[str, Union[str, Dict[str, str]]] = {}
-
-    for name, options in _exported.items():
-        if isinstance(name, str):
-            exported[name] = options
-        else:
-            for n in name:
-                exported[n] = options
-
-    if not strtobool(environ.get('PYIPC_LAZY_IMPORTS', 'yes')):
-        for name, options in exported.items():
-            _import_name(name, options, ns)
-
-        return
-
-    def lazy_import(name):
-        try:
-            return ns[name]
-        except KeyError:
-            pass
-
-        try:
-            options = exported[name]
-        except KeyError:
-            raise AttributeError(
-                f"module '{ns['__name__']}' has no attribute '{name}'"
-            ) from None
-
-        return _import_name(name, options, ns)
-
-    ns['__getattr__'] = lazy_import
-
-
-def _import_name(name: str, options: Union[str, Dict[str, str]], ns: Dict[str, Any]):
-    if isinstance(options, str):
-        module_name = options
-        attr = name
-    else:
-        module_name = options['module']
-        attr = options.get('variable', name)
-
-    module = import_module(module_name)
-
-    if attr == '*':
-        res = module
-    else:
-        res = getattr(module, attr)
-
-    ns[name] = res
-
-    return res
 
 
 async def maybe_awaitable(
