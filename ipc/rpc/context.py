@@ -78,6 +78,10 @@ class Context(Generic[ServerT]):
                 raise CommandNotFound(self.command_name)
 
             ret = await maybe_awaitable(command, self, *self.args, **self.kwargs)
+
+            if not self._responded:
+                self.respond(ret)
+
         except Exception as exc:
             if not isinstance(exc, CommandError):
                 exc = CommandInvokeError(exc)
@@ -85,9 +89,6 @@ class Context(Generic[ServerT]):
             self.error = exc
 
             self.server.dispatch('command_error', self)
-        else:
-            if not self._responded:
-                self.respond(ret)
 
     def respond(self, data: Any, error: bool = False) -> Self:
         if self._responded:
@@ -102,7 +103,7 @@ class Context(Generic[ServerT]):
 
         response['nonce'] = self._nonce
         response['__rpc_response__'] = True
-        
+
         if self.connection.is_connected():
             self.connection.send(response)
 
