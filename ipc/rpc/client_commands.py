@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     from ipc.rpc.client import Client
 
 
-
 class ClientCommands:
     __slots__ = ('__client',)
 

@@ -115,7 +115,7 @@ class BaseConnection(EventManagerMixin, ContextManagerMixin):
         timeout: Optional[float] = None,
     ) -> Coroutine[Any, Any, Any]:
         """Shorthand method for ``wait_for('message')``.
-        
+
         See :meth:`.wait_for` for more info.
         """
         return self.wait_for('message', predicate=predicate, timeout=timeout)

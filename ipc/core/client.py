@@ -38,7 +38,7 @@ class Client(BaseConnection):
 
         self.host = host
         self.port = port
-        
+
     def __await__(self) -> Generator[Any, None, Self]:
         # Not sure if this will be kept
         return self.connect(run_sync=False).__await__()
@@ -62,7 +62,7 @@ class Client(BaseConnection):
         manage the event loop and cleanup is done for you. If this is set to ``False``,
         a coroutine is returned that resolves when the client has made it online.
         By default, ``run_sync`` is ``False``.
-        
+
         If this method is called while a connection is open, it does nothing.
 
         Parameters
