@@ -53,10 +53,7 @@ class Context(Generic[ServerT]):
         self._nonce = data['nonce']
         self.args = data.get('args', [])
         self.command_name = data['command']
-        self.command = self.server.get_command(self.command_name)
-
-        if 'extra' in data:
-            self.extra = data['extra']
+        self.command = self.server.commands.get(self.command_name)
 
     async def __aenter__(self):
         return self

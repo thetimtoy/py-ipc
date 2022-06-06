@@ -85,16 +85,6 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
         print(f'IPC command {ctx.command_name} raised an exception:', file=stderr)
         print_exception(type(exc), exc, exc.__traceback__, file=stderr)
 
-    def get_command(self, command_name: str) -> Optional[Command]:
-        """Get a command by a name or alias.
-
-        Parameters
-        ----------
-        command_name: :class:`str`
-            The command name.
-        """
-        return self.commands.get(command_name)
-
     def command(self, command: Optional[Union[str, Callable[..., Any]]] = None) -> Any:
         if not callable(command):
 
