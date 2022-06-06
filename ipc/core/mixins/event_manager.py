@@ -296,7 +296,7 @@ class EventManagerMixin:
 
         return listeners
 
-    def remove_listeners(self, event: str) -> Self:
+    def remove_listeners_for(self, event: str) -> Self:
         """Remove all listeners for a given event.
 
         This helper also removes the root listener if it exists.
@@ -306,7 +306,12 @@ class EventManagerMixin:
         except KeyError:
             pass
         else:
-            self._listeners[event] = self._filter_listeners(listeners)
+            listeners = self._filter_listeners(listeners, return_waiters=True)
+
+            if not len(listeners):
+                del self._listeners[event]
+            else:
+                self._listeners[event] = listeners
 
         try:
             delattr(self, f'on_{event}')
@@ -318,7 +323,7 @@ class EventManagerMixin:
     def remove_all_listeners(self) -> Self:
         """Remove all listeners bound to this object."""
         for event in self._listeners:
-            self.remove_listeners(event)
+            self.remove_listeners_for(event)
 
         return self
 
