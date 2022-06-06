@@ -38,6 +38,9 @@ class BaseConnection(EventManagerMixin, ContextManagerMixin):
         _transport: Transport
         _close_waiter: Future[None]
         _paused: bool
+        # must be implemented by subclasses
+        host: str
+        port: int
 
     __slots__ = (
         '_read_buffer',
@@ -61,6 +64,12 @@ class BaseConnection(EventManagerMixin, ContextManagerMixin):
             eof_received=self._protocol_cb_eof_received,
             pause_writing=self._protocol_cb_pause_writing,
             resume_writing=self._protocol_cb_resume_writing,
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f'<{type(self).__name__} host={self.host} '
+            f'port={self.port} connected={self.connected}>'
         )
 
     # Public

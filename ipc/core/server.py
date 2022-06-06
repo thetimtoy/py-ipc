@@ -63,6 +63,13 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
         self.connection_factory = connection_factory
         self._connections = []
 
+    def __repr__(self) -> str:
+        return (
+            f'<{type(self).__name__} host={self.host} '
+            f'port={self.port} connected={self.connected} '
+            f'connections={len(self._connections)}>'
+        )
+
     # Public
 
     if TYPE_CHECKING:
