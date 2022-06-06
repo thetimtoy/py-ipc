@@ -109,7 +109,7 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
             return connection._protocol
 
         async def create_server():
-            if not self.is_connected():
+            if not self.connected:
                 loop = get_event_loop()
 
                 self._server = await loop.create_server(
@@ -133,12 +133,12 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
 
             try:
                 # runs the asyncio server until runner()
-                # is cancelled or .close() is called.
+                # is cancelled or .disconnect() is called.
                 await self._server.serve_forever()
             except CancelledError:
                 pass
             finally:
-                await self.close()
+                await self.disconnect()
 
         try:
             run(runner())
@@ -148,21 +148,27 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
         return self
 
     async def close(self) -> Self:
-        """Close the server and any open connections.
+        """Close the server along with any open connections.
 
         This method is idemponent.
         """
-        if self.is_connected():
-            self._connected = False
+        coros: List[Coroutine[Any, Any, Any]] = []
 
-            coros: List[Coroutine[Any, Any, Any]] = []
+        if self.connected:
+            coros.append(self.disconnect())
 
+        if len(self._connections):
             for connection in self._connections:
                 coros.append(connection.close())
 
-            await gather(*coros, return_exceptions=True)
+        if len(coros):
+            await gather(*coros)
 
-            self._connections.clear()
+        return self
+
+    async def disconnect(self) -> Self:
+        if self._connected:
+            self._connected = False
 
             server = self._server
 
@@ -176,7 +182,8 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
 
         return self
 
-    def is_connected(self) -> bool:
+    @property
+    def connected(self) -> bool:
         return self._connected
 
     @property
