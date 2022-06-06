@@ -13,8 +13,11 @@ jobs:
       fail-fast: false
       matrix:
         name:
-          - build
+          - type-check
           - lint
+        script:
+          - pyright
+          - black --check ipc examples
 
     name: ${{ matrix.name }}
     steps:
@@ -31,5 +34,5 @@ jobs:
           poetry run python setup.py install
       
       - name: Run checks
-        run: poetry run {{ matrix.name }}
+        run: poetry run {{ matrix.script }}
         
