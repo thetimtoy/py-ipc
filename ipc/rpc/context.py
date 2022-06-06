@@ -75,6 +75,8 @@ class Context(Generic[ServerT]):
             if not self._responded:
                 self.respond(ret)
 
+            self.server.dispatch('command_success', self)
+
         except Exception as exc:
             if not isinstance(exc, CommandError):
                 exc = CommandInvokeError(exc)
