@@ -9,6 +9,7 @@ from typing import (
     overload,
 )
 
+from ipc.core.connection import Connection
 from ipc.core.server import Server as BaseServer
 from ipc.core.utils import NULL
 from ipc.rpc.context import Context
@@ -42,6 +43,9 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
         *,
         connection_factory: Callable[[Self], ConnectionT] = NULL,
     ) -> None:
+        if connection_factory is NULL:
+            connection_factory = Connection  # type: ignore
+            
         super().__init__(host, port, connection_factory=connection_factory)
 
         self.commands = {}

@@ -54,15 +54,13 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
         host: str,
         port: int,
         *,
-        connection_factory: Callable[[Self], ConnectionT] = NULL,
+        connection_factory: Callable[[Self], ConnectionT] = Connection,
     ) -> None:
         super().__init__()
 
         self.host = host
         self.port = port
-        self.connection_factory = (
-            connection_factory if connection_factory is not NULL else Connection
-        )
+        self.connection_factory = connection_factory
         self._connections = []
 
     # Public
