@@ -12,12 +12,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name:
-          - type-check
-          - lint
-        script:
-          - pyright
-          - black --check ipc examples
+        include:
+        - name: type-check
+          script: pyright
+        - name: lint
+          script: black --check ipc examples
 
     name: ${{ matrix.name }}
     steps:
@@ -31,8 +30,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install poetry
+          poetry install
           poetry run python setup.py install
       
       - name: Run checks
-        run: poetry run {{ matrix.script }}
+        run: poetry run ${{ matrix.script }}
         

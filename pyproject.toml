@@ -16,10 +16,15 @@ authors = ["Tinoy Thomas <tinoytpm1@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 orjson = { version = "^3.6.8", optional = true }
+setuptools = "^62.3.2"
+pyright = "^1.1.252"
 
 [tool.poetry.extras]
 optional = ['orjson']
 
+
+[tool.poetry.dev-dependencies]
+black = "^22.3.0"
 [build-system]
 requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"
