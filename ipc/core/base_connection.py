@@ -27,6 +27,8 @@ if TYPE_CHECKING:
 
 __all__ = ('BaseConnection',)
 
+_WHITESPACE = b' '
+
 
 class BaseConnection(EventManagerMixin, ContextManagerMixin):
     """Base class for objects that represent a connection."""
@@ -166,7 +168,7 @@ class BaseConnection(EventManagerMixin, ContextManagerMixin):
         buffer.extend(data)
 
         while True:
-            ws_idx = buffer.find(b' ')
+            ws_idx = buffer.find(_WHITESPACE)
 
             if ws_idx == -1:
                 return
