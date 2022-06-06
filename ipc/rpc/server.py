@@ -96,31 +96,32 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
                 else:
                     name = func.__name__
 
-                self.add_command(name, func)
+                self.register(name, func)
 
                 return command
 
             return decorator
 
-        self.add_command(command)
+        self.register(command)
 
         return command
 
     if TYPE_CHECKING:
 
         @overload
-        def add_command(self, command: str, func: Callable[..., Any]) -> Self:
+        def register(self, command: str, func: Callable[..., Any]) -> Self:
             ...
 
         @overload
-        def add_command(self, command: Callable[..., Any]) -> Self:
+        def register(self, command: Callable[..., Any]) -> Self:
             ...
 
-    def add_command(
+    def register(
         self,
         command: Union[str, Callable[..., Any]],
         func: Callable[..., Any] = NULL,
     ) -> Self:
+        """Register a command."""
         if isinstance(command, str):
             name = command
         elif callable(command):
@@ -136,8 +137,8 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
 
         return self
 
-    def remove_command(self, command_name: str) -> Self:
-        """Remove a command by a name or alias.
+    def unregister(self, command_name: str) -> Self:
+        """Unregister a command by a name or alias.
 
         Parameters
         ----------
