@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from inspect import getmembers
 from sys import stderr
 from traceback import print_exception
 from typing import (
@@ -13,7 +12,6 @@ from ipc.core.connection import Connection
 from ipc.core.server import Server as BaseServer
 from ipc.core.utils import NULL
 from ipc.rpc.context import Context
-from ipc.rpc.commands import Command
 from ipc.rpc.errors import CommandAlreadyRegistered
 from ipc.rpc.types import ConnectionT
 from ipc.rpc.utils import is_command
@@ -33,7 +31,7 @@ __all__ = ('Server',)
 
 class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
     if TYPE_CHECKING:
-        commands: Dict[str, Command]
+        commands: Dict[str, Callable[..., Any]]
         connection_factory: Callable[[Self], ConnectionT]
 
     def __init__(
@@ -49,13 +47,6 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
         super().__init__(host, port, connection_factory=connection_factory)
 
         self.commands = {}
-
-        for _, v in getmembers(type(self), lambda o: isinstance(o, Command)):
-            v: Command
-
-            v._server = self
-
-            self.add_command(v)
 
     async def on_message(self, connection: ConnectionT, data: Any) -> None:
         await self.handle_command(connection, data)
@@ -115,15 +106,11 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
                 else:
                     name = func.__name__
 
-                command = Command(func=func, name=name)
-
-                self.add_command(command)
+                self.add_command(name, func)
 
                 return command
 
             return decorator
-
-        command = Command(func=command)
 
         self.add_command(command)
 
@@ -139,34 +126,23 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
         def add_command(self, command: Callable[..., Any]) -> Self:
             ...
 
-        @overload
-        def add_command(self, command: Command) -> Self:
-            ...
-
     def add_command(
         self,
-        command: Union[str, Callable[..., Any], Command],
+        command: Union[str, Callable[..., Any]],
         func: Callable[..., Any] = NULL,
     ) -> Self:
-        """Add a command."""
-        if not isinstance(command, Command):
-            if isinstance(command, str):
-                name = command
-
-                assert func is not NULL and not isinstance(func, Command)
-            elif callable(command):
-                name = command.__name__
-                func = command
-
-            command = Command(name=name, func=func)
+        if isinstance(command, str):
+            name = command
+        elif callable(command):
+            name = command.__name__
+            func = command
 
         commands = self.commands
 
-        for name in command.get_all_names():
-            if name in commands:
-                raise CommandAlreadyRegistered(name, command)
+        if name in commands:
+            raise CommandAlreadyRegistered(name, func)
 
-            commands[name] = command
+        commands[name] = func
 
         return self
 
@@ -178,19 +154,9 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
         command_name: :class:`str`
             The command name.
         """
-        commands = self.commands
-
         try:
-            command = commands[command_name]
+            del self.commands[command_name]
         except KeyError:
             pass
-        else:
-            command._server = None
-
-            for name in command.get_all_names():
-                try:
-                    del commands[name]
-                except KeyError:
-                    pass
 
         return self

@@ -16,13 +16,12 @@ from ipc.rpc.errors import (
 if TYPE_CHECKING:
     from typing import (
         Any,
-        Dict,
+        Callable,
         List,
         Optional,
     )
     from typing_extensions import Self
 
-    from ipc.rpc.commands import Command
     from ipc.rpc.server import Server
     from ipc.rpc.types import Connection
 
@@ -39,7 +38,7 @@ class Context(Generic[ServerT]):
         _nonce: int
         args: List[str]
         kwargs: Dict[str, Any]
-        command: Optional[Command]
+        command: Optional[Callable[..., Any]]
         error: Optional[CommandError]
         extra: Optional[Any]
         _responded: bool

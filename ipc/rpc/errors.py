@@ -4,9 +4,6 @@ from typing import TYPE_CHECKING
 
 from ipc.core.errors import IpcError
 
-if TYPE_CHECKING:
-    from ipc.rpc.commands import Command
-
 __all__ = (
     'RpcError',
     'CommandAlreadyRegistered',
