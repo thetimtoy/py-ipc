@@ -70,14 +70,15 @@ class BaseConnection(EventManagerMixin, ContextManagerMixin):
 
         This method is idemponent.
         """
-        if self.is_connected():
+        if self.connected:
             self._transport.close()
 
             await self._wait_closed()
 
         return self
 
-    def is_connected(self) -> bool:
+    @property
+    def connected(self) -> bool:
         """:class:`bool`: Whether this connection is open."""
         return hasattr(self, '_transport') and not self._transport.is_closing()
 
@@ -88,7 +89,7 @@ class BaseConnection(EventManagerMixin, ContextManagerMixin):
 
         `data` must be an object :func:`json.dumps` can serialize.
         """
-        if not self.is_connected():
+        if not self.connected:
             raise NotConnected('Connection is closed.')
 
         json = json_dumps(data)

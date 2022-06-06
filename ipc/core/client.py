@@ -86,7 +86,7 @@ class Client(BaseConnection):
         """
 
         async def create_connection():
-            if not self.is_connected():
+            if not self.connected:
                 await get_event_loop().create_connection(
                     lambda: self._protocol,
                     host=self.host,
