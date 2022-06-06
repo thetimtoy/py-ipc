@@ -13,7 +13,7 @@ setuptools.setup(
     version=version,
     author='thetimtoy',
     license='MIT',
-    description='A simple package to facilitate IPC communication in Python',
+    description='A simple package to facilitate IPC in Python',
     long_description=readme,
     long_description_content_type='text/markdown',
     url='https://github.com/thetimtoy/py-ipc',
