@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+          - build
+          - lint
+
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up CPython v3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          python -m pip install poetry
+          poetry setup.py install
+      
+      - name: Run checks
+        run: poetry run {{ matrix.name }}
+        
