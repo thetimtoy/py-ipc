@@ -141,7 +141,7 @@ class Client(BaseClient):
     def commands(self) -> ClientCommands:
         return ClientCommands(self)
 
-    async def invoke(self, command: str, *args: Any, **kwargs: Any) -> Any:
+    async def invoke(self, command: str, *args: Any) -> Any:
         """Invoke a command.
 
         Parameters
@@ -149,15 +149,13 @@ class Client(BaseClient):
         command: :class:`str`
             The name of the command you are attempting to invoke.
         *args: Any
-            The positional arguments to pass to the command.
-        **kwargs: Any
-            The key word arguments to pass to the command.
+            The arguments to pass to the command.
 
         Examples
         --------
         Usage ::
 
-            resp = await client.invoke('foo', 123, bar='qux')
+            resp = await client.invoke('foo', 123)
 
             assert resp == [1, 2, 3]
         """

@@ -20,4 +20,4 @@ class ClientCommands:
     def __getattr__(self, name: str) -> Callable[..., Coroutine[Any, Any, Any]]:
         client = self.__client
 
-        return lambda *args, **kwds: client.invoke(name, *args, **kwds)
+        return lambda *args: client.invoke(name, *args)

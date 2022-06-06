@@ -38,7 +38,6 @@ class Context(Generic[ServerT]):
         server: ServerT
         _nonce: int
         args: List[str]
-        kwargs: Dict[str, Any]
         command: Optional[Callable[..., Any]]
         error: Optional[CommandError]
         extra: Optional[Any]
@@ -73,7 +72,7 @@ class Context(Generic[ServerT]):
             if command is None:
                 raise CommandNotFound(self.command_name)
 
-            ret = await maybe_awaitable(command, self, *self.args, **self.kwargs)
+            ret = await maybe_awaitable(command, self, *self.args)
 
             if not self._responded:
                 self.respond(ret)
