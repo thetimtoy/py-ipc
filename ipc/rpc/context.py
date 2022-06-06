@@ -51,8 +51,7 @@ class Context(Generic[ServerT]):
         self.connection = connection
         self.server = connection.server
         self._nonce = data['nonce']
-        self.args = data.get('args', ())
-        self.kwargs = data.get('kwargs', {})
+        self.args = data.get('args', [])
         self.command_name = data['command']
         self.command = self.server.get_command(self.command_name)
 
@@ -103,7 +102,7 @@ class Context(Generic[ServerT]):
         response['nonce'] = self._nonce
         response['__rpc_response__'] = True
 
-        if self.connection.is_connected():
+        if self.connection.connected:
             self.connection.send(response)
 
         self._responded = True
