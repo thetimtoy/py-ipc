@@ -17,13 +17,14 @@ if TYPE_CHECKING:
     from typing import (
         Any,
         Callable,
+        Dict,
         List,
         Optional,
     )
     from typing_extensions import Self
 
     from ipc.rpc.server import Server
-    from ipc.rpc.types import Connection
+    from ipc.rpc.types import CommandData, Connection
 
 __all__ = ('Context',)
 
@@ -47,7 +48,7 @@ class Context(Generic[ServerT]):
     extra = None
     _responded = False
 
-    def __init__(self, connection: Connection, data: Dict[str, Any]) -> None:
+    def __init__(self, connection: Connection, data: CommandData) -> None:
         self.connection = connection
         self.server = connection.server
         self._nonce = data['nonce']

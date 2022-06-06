@@ -19,6 +19,8 @@ if TYPE_CHECKING:
         Union,
     )
     from typing_extensions import Self
+    
+    from ipc.rpc.types import CommandData, ResponseData
 
     T = TypeVar('T')
 
@@ -35,7 +37,7 @@ class Client(BaseClient):
 
     if TYPE_CHECKING:
         _nonce: int
-        _response_waiters: Dict[int, Future[Any]]
+        _response_waiters: Dict[int, Future[ResponseData]]
         options: Dict[str, Any]
         next_options: Dict[str, Any]
 
@@ -59,7 +61,7 @@ class Client(BaseClient):
     def on_message(self, data: Any) -> None:
         self.handle_response(data)
 
-    def handle_response(self, data: Dict[str, Any]) -> None:
+    def handle_response(self, data: Any) -> None:
         """Handle a received command response.
 
         This method serves as a helper to resolve the future
@@ -163,21 +165,18 @@ class Client(BaseClient):
 
         self._nonce = nonce + 1
 
-        data = {
+        data: CommandData = {
             '__rpc_command__': True,
             'command': command,
             'nonce': nonce,
         }
 
         if args:
-            data['args'] = args
-
-        if kwargs:
-            data['kwargs'] = kwargs
+            data['args'] = list(args)
 
         self.send(data)
 
-        fut = future()
+        fut: Future[ResponseData] = future()
         self._response_waiters[nonce] = fut
 
         timeout: Optional[float] = self.get_option('timeout')
@@ -193,4 +192,4 @@ class Client(BaseClient):
         if 'error' in response:
             raise ServerError(response['error'])
 
-        return response['return']
+        return response.get('return', None)

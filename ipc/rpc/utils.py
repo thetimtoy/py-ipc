@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+from typing_extensions import TypeGuard
 
 if TYPE_CHECKING:
-    from typing import Any
+    from ipc.rpc.types import CommandData, ResponseData
 
 __all__ = (
     'is_command',
@@ -11,9 +12,9 @@ __all__ = (
 )
 
 
-def is_command(data: Any) -> bool:
+def is_command(data: Any) -> TypeGuard[CommandData]:
     return isinstance(data, dict) and '__rpc_command__' in data
 
 
-def is_response(data: Any) -> bool:
+def is_response(data: Any) -> TypeGuard[ResponseData]:
     return isinstance(data, dict) and '__rpc_response__' in data

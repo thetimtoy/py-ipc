@@ -23,8 +23,11 @@ if TYPE_CHECKING:
         Dict,
         Optional,
         Union,
+        TypeVar,
     )
     from typing_extensions import Self
+
+    FuncT = TypeVar('FuncT', bound=Callable[..., Any])
 
 __all__ = ('Server',)
 
@@ -84,6 +87,16 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
 
         print(f'IPC command {ctx.command_name} raised an exception:', file=stderr)
         print_exception(type(exc), exc, exc.__traceback__, file=stderr)
+
+    if TYPE_CHECKING:
+
+        @overload
+        def command(self, command: Optional[str] = ...) -> Callable[[FuncT], FuncT]:
+            ...
+
+        @overload
+        def command(self, command: FuncT) -> FuncT:
+            ...
 
     def command(self, command: Optional[Union[str, Callable[..., Any]]] = None) -> Any:
         if not callable(command):
