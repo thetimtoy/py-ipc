@@ -40,11 +40,9 @@ class Context(Generic[ServerT]):
         args: List[str]
         command: Optional[Callable[..., Any]]
         error: Optional[CommandError]
-        extra: Optional[Any]
         _responded: bool
 
     error = None
-    extra = None
     _responded = False
 
     def __init__(self, connection: Connection, data: CommandData) -> None:
