@@ -8,23 +8,24 @@ from asyncio import (
 )
 from typing import (
     TYPE_CHECKING,
+    Callable,
     Generic,
 )
 
 from ipc.core.connection import Connection
-from ipc.core.mixins.context_manager import ContextManagerMixin
-from ipc.core.mixins.event_manager import EventManagerMixin
+from ipc.core.event_manager import EventManager
 from ipc.core.types import ConnectionT
 from ipc.core.utils import NULL
 
 if TYPE_CHECKING:
     from asyncio import AbstractServer
+    from types import TracebackType
     from typing import (
         Any,
-        Callable,
         Coroutine,
         List,
         Optional,
+        Type,
         overload,
     )
     from typing_extensions import (
@@ -38,14 +39,14 @@ if TYPE_CHECKING:
 __all__ = ('Server',)
 
 
-class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
+class Server(EventManager, Generic[ConnectionT]):
     if TYPE_CHECKING:
         host: str
         port: int
         _connected: bool
         _connections: List[ConnectionT]
         _server: AbstractServer
-        connection_factory: Callable[[Self], ConnectionT]
+        connection_factory: Callable[[Server], ConnectionT]
 
     _connected = False
 
@@ -54,7 +55,7 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
         host: str,
         port: int,
         *,
-        connection_factory: Callable[[Self], ConnectionT] = Connection,
+        connection_factory: Callable[[Server], ConnectionT] = NULL,
     ) -> None:
         super().__init__()
 
@@ -69,6 +70,19 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
             f'port={self.port} connected={self.connected} '
             f'connections={len(self._connections)}>'
         )
+
+    async def __aenter__(self) -> Self:
+        await self.connect()
+
+        return self
+
+    async def __aexit__(
+        self,
+        exc_tp: Optional[Type[BaseException]],
+        exc: Optional[BaseException],
+        tp: Optional[TracebackType],
+    ) -> None:
+        await self.close()
 
     # Public
 
@@ -111,7 +125,12 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
         """
 
         def factory() -> Protocol:
-            connection = self.connection_factory(self)
+            factory = self.connection_factory
+
+            if factory is NULL:
+                factory = Connection
+
+            connection = factory(self)
 
             return connection._protocol
 
@@ -157,6 +176,9 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
     async def close(self) -> Self:
         """Close the server along with any open connections.
 
+        Note that the ``close`` event is triggered by :meth:`.disconnect`,
+        not this method.
+
         This method is idemponent.
         """
         coros: List[Coroutine[Any, Any, Any]] = []
@@ -174,6 +196,9 @@ class Server(Generic[ConnectionT], EventManagerMixin, ContextManagerMixin):
         return self
 
     async def disconnect(self) -> Self:
+        """Close the server.
+
+        This method is idemponent."""
         if self._connected:
             self._connected = False
 

@@ -4,16 +4,14 @@ from sys import stderr
 from traceback import print_exception
 from typing import (
     TYPE_CHECKING,
-    Generic,
     overload,
 )
 
-from ipc.core.connection import Connection
 from ipc.core.server import Server as BaseServer
+from ipc.core.types import ConnectionT
 from ipc.core.utils import NULL
 from ipc.rpc.context import Context
 from ipc.rpc.errors import CommandAlreadyRegistered
-from ipc.rpc.types import ConnectionT
 from ipc.rpc.utils import is_command
 
 if TYPE_CHECKING:
@@ -27,27 +25,25 @@ if TYPE_CHECKING:
     )
     from typing_extensions import Self
 
-    FuncT = TypeVar('FuncT', bound=Callable[..., Any])
+    from ipc.rpc.types import CommandFunc
+
+    CommandFuncT = TypeVar('CommandFuncT', bound=CommandFunc)
 
 __all__ = ('Server',)
 
 
-class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
+class Server(BaseServer[ConnectionT]):
     if TYPE_CHECKING:
-        commands: Dict[str, Callable[..., Any]]
-        connection_factory: Callable[[Self], ConnectionT]
+        commands: Dict[str, CommandFunc]
 
     def __init__(
         self,
         host: str,
         port: int,
         *,
-        connection_factory: Callable[[Self], ConnectionT] = NULL,
+        connection_factory: Callable[[Server], ConnectionT] = NULL,
     ) -> None:
-        if connection_factory is NULL:
-            connection_factory = Connection  # type: ignore
-            
-        super().__init__(host, port, connection_factory=connection_factory)
+        super().__init__(host, port, connection_factory=connection_factory)  # type: ignore
 
         self.commands = {}
 
@@ -59,12 +55,12 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
         connection: ConnectionT,
         data: Any,
         *,
-        factory: Callable[[ConnectionT, Any], Context] = Context,
+        factory: Callable[[Self, ConnectionT, Any], Context] = Context,
     ) -> None:
         if not is_command(data):
             return
 
-        ctx = factory(connection, data)
+        ctx = factory(self, connection, data)
 
         await ctx.invoke()
 
@@ -91,14 +87,16 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
     if TYPE_CHECKING:
 
         @overload
-        def command(self, command: Optional[str] = ...) -> Callable[[FuncT], FuncT]:
+        def command(
+            self, command: Optional[str] = ...
+        ) -> Callable[[CommandFuncT], CommandFuncT]:
             ...
 
         @overload
-        def command(self, command: FuncT) -> FuncT:
+        def command(self, command: CommandFuncT) -> CommandFuncT:
             ...
 
-    def command(self, command: Optional[Union[str, Callable[..., Any]]] = None) -> Any:
+    def command(self, command: Optional[Union[str, CommandFunc]] = None) -> Any:
         if not callable(command):
 
             def decorator(func):
@@ -122,17 +120,17 @@ class Server(Generic[ConnectionT], BaseServer[ConnectionT]):
     if TYPE_CHECKING:
 
         @overload
-        def register(self, command: str, func: Callable[..., Any]) -> Self:
+        def register(self, command: str, func: CommandFunc) -> Self:
             ...
 
         @overload
-        def register(self, command: Callable[..., Any]) -> Self:
+        def register(self, command: CommandFunc) -> Self:
             ...
 
     def register(
         self,
-        command: Union[str, Callable[..., Any]],
-        func: Callable[..., Any] = NULL,
+        command: Union[str, CommandFunc],
+        func: CommandFunc = NULL,
     ) -> Self:
         """Register a command."""
         if isinstance(command, str):

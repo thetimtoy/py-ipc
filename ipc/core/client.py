@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from typing import (
         Any,
         Coroutine,
-        Generator,
         Optional,
         overload,
     )
@@ -39,9 +38,10 @@ class Client(BaseConnection):
         self.host = host
         self.port = port
 
-    def __await__(self) -> Generator[Any, None, Self]:
-        # Not sure if this will be kept
-        return self.connect(run_sync=False).__await__()
+    async def __aenter__(self) -> Self:
+        await self.connect()
+
+        return await super().__aenter__()
 
     # Public
 

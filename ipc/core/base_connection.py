@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ipc.core.errors import NotConnected
-from ipc.core.mixins.context_manager import ContextManagerMixin
-from ipc.core.mixins.event_manager import EventManagerMixin
+from ipc.core.event_manager import EventManager
 from ipc.core.protocol import Protocol
 from ipc.core.utils import (
     future,
@@ -17,11 +16,13 @@ if TYPE_CHECKING:
         Future,
         Transport,
     )
+    from types import TracebackType
     from typing import (
         Any,
         Callable,
         Coroutine,
         Optional,
+        Type,
     )
     from typing_extensions import Self
 
@@ -30,7 +31,7 @@ __all__ = ('BaseConnection',)
 _WHITESPACE = b' '
 
 
-class BaseConnection(EventManagerMixin, ContextManagerMixin):
+class BaseConnection(EventManager):
     """Base class for objects that represent a connection."""
 
     if TYPE_CHECKING:
@@ -73,6 +74,17 @@ class BaseConnection(EventManagerMixin, ContextManagerMixin):
             f'<{type(self).__name__} host={self.host} '
             f'port={self.port} connected={self.connected}>'
         )
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_tp: Optional[Type[BaseException]],
+        exc: Optional[BaseException],
+        tb: Optional[TracebackType],
+    ) -> None:
+        await self.close()
 
     # Public
 
@@ -134,7 +146,7 @@ class BaseConnection(EventManagerMixin, ContextManagerMixin):
 
     def _wait_closed(self) -> Future[None]:
         """:class:`asyncio.Future`: Return a future that resolves
-        when :meth:`._connection_lost` is called.
+        when :meth:`._protocol_cb_connection_lost` is called.
         """
         if not hasattr(self, '_close_waiter'):
             self._close_waiter = future()
@@ -185,7 +197,7 @@ class BaseConnection(EventManagerMixin, ContextManagerMixin):
 
             del buffer[:end]
 
-            self.dispatch('message', json_loads(d))
+            self.dispatch('message', json_loads(d if d.__class__ is bytes else bytes(d)))
 
     def _protocol_cb_eof_received(self) -> bool:
         """Called when eof is received."""

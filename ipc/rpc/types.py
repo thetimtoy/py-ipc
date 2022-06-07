@@ -2,22 +2,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     List,
-    TypeVar,
+    Protocol,
 )
 from typing_extensions import Literal, NotRequired, TypedDict
 
 
 if TYPE_CHECKING:
-    from ipc.core.connection import Connection as _Connection
-    from ipc.rpc.server import Server
-
-    # Bandaid for the fact that Connection is not generic
-    class Connection(_Connection):
-        if TYPE_CHECKING:
-            server: Server
-
-        def __init__(self, server: Server) -> None:
-            ...
+    from ipc.rpc.context import Context
 
     class CommandData(TypedDict):
         __rpc_command__: Literal[True]
@@ -28,12 +19,15 @@ if TYPE_CHECKING:
     ResponseData = TypedDict(
         'ResponseData',
         {
-            '__rpc_response': Literal[True],
+            '__rpc_response__': Literal[True],
             'nonce': int,
             'return': NotRequired[Any],
             'error': NotRequired[str],
         },
     )
 
+    class CommandFunc(Protocol):
+        __name__: str
 
-ConnectionT = TypeVar('ConnectionT', bound='Connection')
+        def __call__(self, ctx: Context, *args: Any) -> Any:
+            ...

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
         Union,
     )
     from typing_extensions import Self
-    
+
     from ipc.rpc.types import CommandData, ResponseData
 
     T = TypeVar('T')
@@ -50,13 +50,10 @@ class Client(BaseClient):
         self.next_options = {}
 
     def _get_option(self, key: str, default: Optional[T] = None) -> Union[Any, T]:
-        if self.next_options is not None:
-            try:
-                return self.next_options[key]
-            except KeyError:
-                pass
-
-        return default
+        try:
+            return self.next_options[key]
+        except KeyError:
+            return default
 
     def on_message(self, data: Any) -> None:
         self.handle_response(data)
@@ -182,7 +179,7 @@ class Client(BaseClient):
         self.next_options.clear()
 
         try:
-            response = await wait_for(fut, timeout=timeout)
+            response: ResponseData = await wait_for(fut, timeout=timeout)
         finally:
             if nonce in self._response_waiters:
                 del self._response_waiters[nonce]

@@ -6,6 +6,7 @@ from typing import (
     TypeVar,
 )
 
+from ipc.core.types import ConnectionT
 from ipc.core.utils import maybe_awaitable
 from ipc.rpc.errors import (
     CommandError,
@@ -16,14 +17,18 @@ from ipc.rpc.errors import (
 if TYPE_CHECKING:
     from typing import (
         Any,
-        Callable,
         List,
         Optional,
     )
     from typing_extensions import Self
 
+    from ipc.core.connection import Connection
     from ipc.rpc.server import Server
-    from ipc.rpc.types import CommandData, Connection
+    from ipc.rpc.types import (
+        CommandData,
+        CommandFunc,
+        ResponseData,
+    )
 
 __all__ = ('Context',)
 
@@ -31,22 +36,24 @@ __all__ = ('Context',)
 ServerT = TypeVar('ServerT', bound='Server')
 
 
-class Context(Generic[ServerT]):
+class Context(Generic[ServerT, ConnectionT]):
     if TYPE_CHECKING:
-        connection: Connection
+        connection: ConnectionT
         server: ServerT
         _nonce: int
         args: List[str]
-        command: Optional[Callable[..., Any]]
+        command: Optional[CommandFunc]
         error: Optional[CommandError]
         _responded: bool
 
     error = None
     _responded = False
 
-    def __init__(self, connection: Connection, data: CommandData) -> None:
+    def __init__(
+        self, server: ServerT, connection: Connection, data: CommandData
+    ) -> None:
         self.connection = connection
-        self.server = connection.server
+        self.server = server
         self._nonce = data['nonce']
         self.args = data.get('args', [])
         self.command_name = data['command']
@@ -88,15 +95,15 @@ class Context(Generic[ServerT]):
         if self._responded:
             raise CommandError('Context has already been responded to.')
 
-        response = {}
+        response: ResponseData = {
+            'nonce': self._nonce,
+            '__rpc_response__': True,
+        }
 
         if error:
             response['error'] = data
         else:
             response['return'] = data
-
-        response['nonce'] = self._nonce
-        response['__rpc_response__'] = True
 
         if self.connection.connected:
             self.connection.send(response)

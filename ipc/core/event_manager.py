@@ -29,10 +29,10 @@ if TYPE_CHECKING:
 
     from ipc.core.types import FuncT
 
-__all__ = ('EventManagerMixin',)
+__all__ = ('EventManager',)
 
 
-class EventManagerMixin:
+class EventManager:
     """Mixin class to provide an API for events."""
 
     __slots__ = ('_listeners',)
