@@ -51,7 +51,7 @@ server.register(foo)
 
 # Register the bar command (this is another way)
 # Invoked with .invoke('bar', str, str)
-@server.command('bar')
+@server.register('bar')
 async def _bar(ctx, a, b):
     await asyncio.sleep(2)
     if not isinstance(a, str) or not isinstance(b, str):

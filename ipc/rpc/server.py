@@ -87,40 +87,11 @@ class Server(BaseServer[ConnectionT]):
     if TYPE_CHECKING:
 
         @overload
-        def command(
-            self, command: Optional[str] = ...
-        ) -> Callable[[CommandFuncT], CommandFuncT]:
-            ...
-
-        @overload
-        def command(self, command: CommandFuncT) -> CommandFuncT:
-            ...
-
-    def command(self, command: Optional[Union[str, CommandFunc]] = None) -> Any:
-        if not callable(command):
-
-            def decorator(func):
-                nonlocal command
-
-                if isinstance(command, str):
-                    name = command
-                else:
-                    name = func.__name__
-
-                self.register(name, func)
-
-                return command
-
-            return decorator
-
-        self.register(command)
-
-        return command
-
-    if TYPE_CHECKING:
-
-        @overload
         def register(self, command: str, func: CommandFunc) -> Self:
+            ...
+
+        @overload
+        def register(self, command: str = ...) -> Callable[[CommandFunc], CommandFunc]:
             ...
 
         @overload
@@ -129,13 +100,18 @@ class Server(BaseServer[ConnectionT]):
 
     def register(
         self,
-        command: Union[str, CommandFunc],
+        command: Union[str, CommandFunc] = NULL,
         func: CommandFunc = NULL,
-    ) -> Self:
+    ) -> Any:
         """Register a command."""
-        if isinstance(command, str):
-            name = command
-        elif callable(command):
+        if isinstance(command, str) or command is NULL:
+            name: str = command  # type: ignore
+
+            if func is NULL:  # @register() or @register('name')
+                return lambda f: self.register(name, f)
+            # else, @register('name', func)
+
+        elif callable(command):  # register(func)
             name = command.__name__
             func = command
 
