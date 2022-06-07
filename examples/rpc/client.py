@@ -1,40 +1,38 @@
-import asyncio
-
 from ipc import rpc
 
 
+# connect to port 8000 on 127.0.0.1
 client = rpc.Client('127.0.0.1', 8000)
 
 
 @client.listener('connect')
-async def on_connect2():
-    # This is an experimental API. This example is
-    # equivalent to client.invoke('qux', 123, bar=456)
-    resp = await client.commands.qux(123, bar='456')
+async def on_connect():
+    """Fired when this client has connected to a server."""
+    print('Client is connected.')
 
-    print('qux response:', resp)
+    d = await client.invoke('foo')
 
-    try:
-        resp = await client.invoke('foo')
-        print('foo response:', resp)
-    except asyncio.TimeoutError:
-        print('foo timed out.')
+    print(f'command foo response: {d}.')
 
-    resp = await client.invoke('baz')
+    d = await client.commands.bar('apple', 'orange')
 
-    print('baz response:', resp)
+    print(f'command bar response: {d}.')
 
+    d = await client.commands.bar(1, 2)  # wrong args!
+    # "d" will be -1 because our server checks isinstance(arg, str)
+    # and returns it if it fails. just pretty basic error handling.
+
+    print(f'command bar response (wrong args): {d}.')
+
+    print('Closing connection...')
     await client.close()
 
 
-@client.listener('connect')
-def on_connect():
-    print('Connected.')
-
-
-@client.listener('disconnect', root=True)
+@client.listener('disconnect')
 def on_disconnect(exc):
-    print('Disconnected.')
+    """Fired when this client has disconnected from a server."""
+    print(f'Client disconnected. exc: {exc}.')
 
 
+# Run the client and let the library manage the event loop
 client.connect(run_sync=True)
