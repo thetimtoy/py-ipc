@@ -23,7 +23,10 @@ if TYPE_CHECKING:
         Union,
         TypeVar,
     )
-    from typing_extensions import Self
+    from typing_extensions import (
+        NoReturn,
+        Self,
+    )
 
     from ipc.rpc.types import CommandFunc
 
@@ -46,6 +49,14 @@ class Server(BaseServer[ConnectionT]):
         super().__init__(host, port, connection_factory=connection_factory)  # type: ignore
 
         self.commands = {}
+
+    def __call__(self, *args: Any, **kwargs: Any) -> NoReturn:
+        raise RuntimeError(
+            f'{self.__class__.__name__} object is not callable. '
+            'Did you mean to call a command instead? If so, make sure to '
+            'call the register() method when using it as a decorator. '
+            'It should look like "@register()", not "@register".'
+        )
 
     async def on_message(self, connection: ConnectionT, data: Any) -> None:
         await self.handle_command(connection, data)
