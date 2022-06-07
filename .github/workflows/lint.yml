@@ -1,4 +1,4 @@
-name: ci
+name: lint
 
 on:
   push:
@@ -7,25 +7,29 @@ on:
     branches: [ master ]
 
 jobs:
-  ci:
+  lint:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        py-version: ['3.7', '3.x']
+        name: ['type-check', 'style']
         include:
-        - name: type-check
-          script: pyright
-        - name: lint
-          script: black --check ipc examples
+          - name: type-check
+            tool: Pyright
+            script: pyright
+          - name: style
+            tool: Black
+            script: black --check ipc examples
 
-    name: ${{ matrix.name }}
+    name: ${{ matrix.py-version }} ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up CPython v3.8
+      - name: Set up CPython v${{ matrix.py-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: ${{ matrix.py-version }}
 
       - name: Install dependencies
         run: |
@@ -33,6 +37,7 @@ jobs:
           poetry install
           poetry run python setup.py install
       
-      - name: Run checks
+      - name: Run ${{ matrix.tool }}
         run: poetry run ${{ matrix.script }}
+
         
