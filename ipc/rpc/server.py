@@ -104,10 +104,11 @@ class Server(BaseServer[ConnectionT]):
         func: CommandFunc = NULL,
     ) -> Any:
         """Register a command."""
-        if isinstance(command, str) or command is NULL:
-            name: str = command  # type: ignore
-
-            if func is NULL:  # @register() or @register('name')
+        if command is NULL:  # @register()
+            return lambda f: self.register(f)
+        if isinstance(command, str):
+            name = command
+            if func is NULL:  # @register('name')
                 return lambda f: self.register(name, f)
             # else, @register('name', func)
 
