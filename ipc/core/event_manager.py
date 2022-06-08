@@ -32,6 +32,33 @@ if TYPE_CHECKING:
 __all__ = ('EventManager',)
 
 
+def _filter_listeners(
+    listeners: Iterable[Callable[..., Any]],
+    *,
+    return_waiters: bool = False,
+) -> List[Callable[..., Any]]:
+    """Remove callables from ``listeners`` that belong to :meth:`.wait_for`
+
+    Parameters
+    ----------
+    listeners: Iterable[Callable[..., Any]]
+        Iterable of event listeners
+    return_waiters: :class:`bool`
+        Whether to return the filtered waiters
+    """
+    ret = []
+
+    for listener in listeners:
+        is_waiter = hasattr(listener, '__ipc_event_waiter__')
+
+        if is_waiter and return_waiters:
+            ret.append(listener)
+        elif not is_waiter and not return_waiters:
+            ret.append(listener)
+
+    return ret
+
+
 class EventManager:
     """Mixin class to provide an API for events."""
 
@@ -110,30 +137,6 @@ class EventManager:
     def _schedule_listener(self, listener: Callable[..., Any], *args: Any) -> None:
         """Wrap a listener in an asyncio task and schedule for it to be called soon."""
         task(self._wrap_listener(listener, *args))
-
-    def _filter_listeners(
-        self, listeners: Iterable[Callable[..., Any]], *, return_waiters: bool = False
-    ) -> List[Callable[..., Any]]:
-        """Remove callables from ``listeners`` that belong to :meth:`.wait_for`
-
-        Parameters
-        ----------
-        listeners: Iterable[Callable[..., Any]]
-            Iterable of event listeners
-        return_waiters: :class:`bool`
-            Whether to return the filtered waiters
-        """
-        ret = []
-
-        for listener in listeners:
-            is_waiter = hasattr(listener, '__ipc_event_waiter__')
-
-            if is_waiter and return_waiters:
-                ret.append(listener)
-            elif not is_waiter and not return_waiters:
-                ret.append(listener)
-
-        return ret
 
     async def _wrap_listener(self, listener: Callable[..., Any], *args: Any) -> None:
         """Run the ``listener`` callable and handle if an :class:`Exception` is raised.
@@ -285,7 +288,7 @@ class EventManager:
         except KeyError:
             listeners = []
         else:
-            listeners = self._filter_listeners(listeners)
+            listeners = _filter_listeners(listeners)
 
         try:
             root_listener = getattr(self, f'on_{event}')
@@ -306,7 +309,7 @@ class EventManager:
         except KeyError:
             pass
         else:
-            listeners = self._filter_listeners(listeners, return_waiters=True)
+            listeners = _filter_listeners(listeners, return_waiters=True)
 
             if not len(listeners):
                 del self._listeners[event]
@@ -343,7 +346,7 @@ class EventManager:
         except KeyError:
             pass
         else:
-            for listener in self._filter_listeners(listeners, return_waiters=True):
+            for listener in _filter_listeners(listeners, return_waiters=True):
                 fut: Future[Any] = listener.__ipc_event_waiter__
 
                 fut.cancel()
