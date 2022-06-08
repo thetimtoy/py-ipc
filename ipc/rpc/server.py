@@ -44,11 +44,12 @@ class Server(BaseServer[ConnectionT]):
         host: str,
         port: int,
         *,
+        commands: Dict[str, CommandFunc] = NULL,
         connection_factory: Callable[[Server], ConnectionT] = NULL,
     ) -> None:
         super().__init__(host, port, connection_factory=connection_factory)  # type: ignore
 
-        self.commands = {}
+        self.commands = commands if commands is not NULL else {}
 
     def __call__(self, *args: Any, **kwargs: Any) -> NoReturn:
         raise RuntimeError(
