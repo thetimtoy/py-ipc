@@ -406,7 +406,7 @@ class EventManager:
 
         Note: This method is experimental and may be removed.
         """
-        for event in self._listeners:
+        for event in tuple(self._listeners):
             self.cancel_waiters(event)
 
         return self
