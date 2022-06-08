@@ -322,7 +322,7 @@ class EventManager:
 
     def remove_all_listeners(self) -> Self:
         """Remove all listeners bound to this object."""
-        for event in self._listeners:
+        for event in tuple(self._listeners):
             self.remove_listeners_for(event)
 
         return self
