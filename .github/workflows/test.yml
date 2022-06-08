@@ -1,4 +1,4 @@
-name: lint
+name: test
 
 on:
   push:
@@ -7,22 +7,14 @@ on:
     branches: [ master ]
 
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         py-version: ['3.7', '3.x']
-        name: ['type-check', 'style']
-        include:
-          - name: type-check
-            tool: Pyright
-            script: pyright --verbose
-          - name: style
-            tool: Black
-            script: black --check -v ipc examples tests
 
-    name: ${{ matrix.py-version }} ${{ matrix.name }}
+    name: Pytest ${{ matrix.py-version }}
     steps:
       - uses: actions/checkout@v2
 
@@ -37,7 +29,5 @@ jobs:
           poetry install
           poetry run python setup.py install
       
-      - name: Run ${{ matrix.tool }}
-        run: poetry run ${{ matrix.script }}
-
-        
+      - name: Run Pytest
+        run: poetry run pytest -v

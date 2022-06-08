@@ -66,16 +66,16 @@ def task(coro: Coroutine[Any, Any, T]) -> Task[T]:
 
 
 async def maybe_awaitable(
-    func: Callable[..., Union[T, Awaitable[T]]],
+    func: Callable[..., Union[Any, Awaitable[Any]]],
     *args: Any,
     **kwargs: Any,
-) -> T:
+) -> Any:
     ret = func(*args, **kwargs)
 
     if isawaitable(ret):
         ret = await ret
 
-    return ret  # type: ignore (type checker can't figure this out)
+    return ret
 
 
 def cached_property(name: str) -> Callable[[Callable[[T], T2]], _CachedProperty[T, T2]]:

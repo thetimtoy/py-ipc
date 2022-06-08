@@ -474,7 +474,7 @@ class EventManager:
 
     # Default event listeners
 
-    async def on_error(self, *args: Any) -> None:
+    def on_error(self, *args: Any) -> None:
         """The default ``error`` event listener.
 
         This prints the error message to :data:`sys.stderr`.
