@@ -17,10 +17,10 @@ jobs:
         include:
           - name: type-check
             tool: Pyright
-            script: pyright
+            script: pyright --verbose
           - name: style
             tool: Black
-            script: black --check ipc examples
+            script: black --check -v ipc examples
 
     name: ${{ matrix.py-version }} ${{ matrix.name }}
     steps:
