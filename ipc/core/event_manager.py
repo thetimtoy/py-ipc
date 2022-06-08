@@ -468,6 +468,7 @@ class EventManager:
             return await wait_for(fut, timeout)
         except (CancelledError, TimeoutError):
             self.remove_listener(event, predicate)
+            del predicate.__ipc_event_waiter__
 
             raise
 
