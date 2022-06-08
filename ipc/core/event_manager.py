@@ -415,8 +415,6 @@ class EventManager:
         try:
             return await wait_for(fut, timeout)
         except (CancelledError, TimeoutError):
-            print(fut.cancelled())
-
             self.remove_listener(event, predicate)
 
             raise
