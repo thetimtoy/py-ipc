@@ -454,6 +454,8 @@ class EventManager:
         """
         if predicate is None:
             predicate = lambda *_: True
+        else:
+            _ensure_callable(predicate, 'predicate')
 
         # .add_listener() will check types of event and predicate
         self.add_listener(event, predicate)
