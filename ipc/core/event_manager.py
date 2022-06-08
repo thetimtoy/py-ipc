@@ -32,6 +32,26 @@ if TYPE_CHECKING:
 __all__ = ('EventManager',)
 
 
+def _ensure_string(text: str, param: Optional[str] = 'event') -> None:
+    if not isinstance(text, str):
+        msg = (
+            f'expected {param} to be str, not {text!r}'
+            if param is not None
+            else f'expected str, not {text!r}'
+        )
+        raise TypeError(msg)
+
+
+def _ensure_callable(func: Callable[..., Any], param: Optional[str] = 'listener') -> None:
+    if not callable(func):
+        msg = (
+            f'expected {param} to be a callable, not {func!r}'
+            if param is not None
+            else f'expected a callable, not {func!r}'
+        )
+        raise TypeError(msg)
+
+
 def _filter_listeners(
     listeners: Iterable[Callable[..., Any]],
     *,
@@ -86,6 +106,8 @@ class EventManager:
         root: :class:`bool`
             Whether to only trigger the root listener for this event.
         """
+        _ensure_string(event)
+
         if not root:
             try:
                 listeners = self._listeners[event]
@@ -129,6 +151,8 @@ class EventManager:
         except AttributeError:
             pass
         else:
+            _ensure_callable(root_listener, f'self.on_{event}')
+
             if event == 'error':
                 task(self._handle_error(*args))
             else:
@@ -173,8 +197,11 @@ class EventManager:
             @listener('connect')
             def on_connect(...): ...
         """
+        _ensure_string(event)
 
         def decorator(func):
+            _ensure_callable(func, None)
+
             self.add_listener(event, func, root=root)
 
             return func
@@ -205,6 +232,9 @@ class EventManager:
             def on_connect(...): ...
             add_listener('connect', on_connect)
         """
+        _ensure_string(event)
+        _ensure_callable(listener)
+
         if root:
             setattr(self, f'on_{event}', listener)
         else:
@@ -243,6 +273,9 @@ class EventManager:
 
             remove_listener('connect', on_connect)
         """
+        _ensure_string(event)
+        _ensure_callable(listener)
+
         try:
             listeners = self._listeners[event]
         except KeyError:
@@ -283,6 +316,8 @@ class EventManager:
 
         This helper also returns the root listener if it exists.
         """
+        _ensure_string(event)
+
         try:
             listeners = self._listeners[event]
         except KeyError:
@@ -304,6 +339,8 @@ class EventManager:
 
         This helper also removes the root listener if it exists.
         """
+        _ensure_string(event)
+
         try:
             listeners = self._listeners[event]
         except KeyError:
@@ -341,6 +378,8 @@ class EventManager:
 
         Note: This method is experimental and may be removed.
         """
+        _ensure_string(event)
+
         try:
             listeners = self._listeners[event]
         except KeyError:
@@ -409,11 +448,12 @@ class EventManager:
         if predicate is None:
             predicate = lambda *_: True
 
+        # .add_listener() will check types of event and predicate
+        self.add_listener(event, predicate)
+
         fut = future()
 
         predicate.__ipc_event_waiter__ = fut
-
-        self.add_listener(event, predicate)
 
         try:
             return await wait_for(fut, timeout)
