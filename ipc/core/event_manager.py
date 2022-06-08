@@ -31,6 +31,8 @@ if TYPE_CHECKING:
 
 __all__ = ('EventManager',)
 
+_ROOT_LISTENER = lambda *_: None
+
 
 def _ensure_string(text: str, param: Optional[str] = 'event') -> None:
     if not isinstance(text, str):
@@ -115,6 +117,9 @@ class EventManager:
                 to_remove = []
 
                 for listener in listeners:
+                    if listener is _ROOT_LISTENER:
+                        continue
+
                     try:
                         fut: Future[Any] = listener.__ipc_event_waiter__
                     except AttributeError:
@@ -235,13 +240,14 @@ class EventManager:
 
         if root:
             setattr(self, f'on_{event}', listener)
-        else:
-            try:
-                listeners = self._listeners[event]
-            except KeyError:
-                listeners = self._listeners[event] = []
+            listener = _ROOT_LISTENER
 
-            listeners.append(listener)
+        try:
+            listeners = self._listeners[event]
+        except KeyError:
+            listeners = self._listeners[event] = []
+
+        listeners.append(listener)
 
         return self
 
@@ -294,6 +300,7 @@ class EventManager:
         else:
             if listener is root_listener:
                 delattr(self, f'on_{event}')
+                self.remove_listener(event, _ROOT_LISTENER)
 
         return self
 
@@ -355,6 +362,8 @@ class EventManager:
             delattr(self, f'on_{event}')
         except AttributeError:
             pass
+        else:
+            self.remove_listener(event, _ROOT_LISTENER)
 
         return self
 
