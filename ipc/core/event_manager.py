@@ -82,8 +82,6 @@ def _filter_listeners(
 class EventManager:
     """Mixin class to provide an API for events."""
 
-    __slots__ = ('_listeners',)
-
     if TYPE_CHECKING:
         _listeners: Dict[str, List[Callable[..., Any]]]
 
