@@ -457,7 +457,7 @@ class EventManager:
         else:
             _ensure_callable(predicate, 'predicate')
 
-        # .add_listener() will check types of event and predicate
+        # .add_listener() will check types of event
         self.add_listener(event, predicate)
 
         fut = future()
