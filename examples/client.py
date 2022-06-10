@@ -25,12 +25,5 @@ async def on_connect():
     await client.close()
 
 
-@client.listener('disconnect')
-def on_disconnect(exc):
-    """Fired when the client has been disconnected."""
-    # "exc" will be an Exception object if an error occured, else None
-    print(f'Client disconnected. exc: {exc}.')
-
-
 # Run the client and let the library manage the event loop
 client.connect(run_sync=True)

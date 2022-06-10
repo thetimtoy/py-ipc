@@ -26,12 +26,6 @@ class MyClient(ipc.Client):
         print('Closing connection...')
         await self.close()
 
-    def on_disconnect(self, exc):
-        """Fired when the client has been disconnected."""
-        # "exc" will be an Exception object if an error occured, else None
-        print(f'Client disconnected. exc: {exc}.')
-
-
 client = MyClient()
 
 # Run the client and let the library manage the event loop

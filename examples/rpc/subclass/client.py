@@ -29,10 +29,6 @@ class MyClient(rpc.Client):
         print('Closing connection...')
         await self.close()
 
-    def on_disconnect(self, exc):
-        """Fired when this client has disconnected from a server."""
-        print(f'Client disconnected. exc: {exc}.')
-
 
 client = MyClient()
 

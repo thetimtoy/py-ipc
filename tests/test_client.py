@@ -37,11 +37,3 @@ async def test_client_connect(client: ipc.Client) -> None:
         assert client.connect(run_sync=True) is client
     finally:
         coro.close()
-
-
-def test_client_default_disconnect_handler(client: ipc.Client) -> None:
-    exc = RuntimeError('test error')
-    with pytest.raises(RuntimeError, match=exc.args[0]):
-        client.on_disconnect(exc)
-
-    client.on_disconnect(None)
