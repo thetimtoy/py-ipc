@@ -26,6 +26,7 @@ class MyClient(ipc.Client):
         print('Closing connection...')
         await self.close()
 
+
 client = MyClient()
 
 # Run the client and let the library manage the event loop

@@ -213,6 +213,7 @@ class EventManager:
     async def _handle_error(self, exc: Exception, *args: Any) -> None:
         """Call :meth:`.on_error` with the given arguments."""
         await maybe_awaitable(self.on_error, exc, *args)
+
     # Managing listeners
 
     def listener(self, event: str, *, root: bool = False) -> Callable[[FuncT], FuncT]:

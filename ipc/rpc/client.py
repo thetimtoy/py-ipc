@@ -25,7 +25,10 @@ if TYPE_CHECKING:
     T = TypeVar('T')
 
 
-__all__ = ('Client','invoke',)
+__all__ = (
+    'Client',
+    'invoke',
+)
 
 
 async def invoke(host: str, port: int, command: str, *args: Any) -> Any:
