@@ -200,6 +200,7 @@ class Server(EventManager, Generic[ConnectionT]):
         This method is idemponent."""
         if self._connected:
             self._connected = False
+            self._stop_events = True
 
             server = self._server
 
