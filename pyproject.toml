@@ -12,6 +12,7 @@ name = "py-ipc"
 version = "0.1.0"
 description = ""
 authors = ["Tinoy Thomas <tinoytpm1@gmail.com>"]
+packages = [{ include = "ipc" }]
 
 [tool.pytest.ini_options]
 asyncio_mode = 'strict'
