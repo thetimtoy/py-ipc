@@ -87,6 +87,8 @@ class Client(BaseConnection):
 
         async def create_connection():
             if not self.connected:
+                if self._stop_events:
+                    self._stop_events = False
                 await get_event_loop().create_connection(
                     lambda: self._protocol,
                     host=self.host,
@@ -112,19 +114,12 @@ class Client(BaseConnection):
 
         return self
 
-    # Default event listeners
+    # Asyncio callbacks
+    def _protocol_cb_connection_lost(self, exc: Optional[Exception]) -> None:
+        self._stop_events = True
+        return super()._protocol_cb_connection_lost(exc)
 
-    def on_disconnect(self, exc: Optional[Exception]) -> None:
-        """The default ``disconnect`` event listener.
-
-        If ``exc`` is not ``None``, it is propagated to :meth:`.on_error`.
-
-        Parameters
-        ----------
-        exc: typing.Optional[:class:`Exception`]: The exception that occured.
-        """
-        if exc is not None:
-            raise exc
+    # Type hints for event listeners
 
     if TYPE_CHECKING:
 

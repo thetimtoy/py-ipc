@@ -16,12 +16,6 @@ def on_ready():
     print('Server is ready.')
 
 
-@server.listener('close')
-def on_close():
-    """Fired when the server is closed."""
-    print('Server closed.')
-
-
 @server.listener('connect')
 def on_connect(conn):
     """Fired when an incoming connection has been established."""
@@ -62,3 +56,5 @@ async def _bar(ctx, a, b):
 
 # Run the server and let the library manage the event loop
 server.connect(run_sync=True)
+
+print('Server closed.')

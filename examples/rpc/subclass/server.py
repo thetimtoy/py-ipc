@@ -21,10 +21,6 @@ class MyServer(rpc.Server):
         """Fired when the server is ready."""
         print('Server is ready.')
 
-    def on_close(self):
-        """Fired when the server is closed."""
-        print('Server closed.')
-
     def on_connect(self, conn):
         """Fired when an incoming connection has been established."""
         print(f'Connection {conn} opened ({len(self.connections)} open in total).')
@@ -53,3 +49,5 @@ class MyServer(rpc.Server):
 server = MyServer()
 
 server.connect(run_sync=True)
+
+print('Server closed.')

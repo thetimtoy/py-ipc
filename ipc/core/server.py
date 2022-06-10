@@ -145,6 +145,8 @@ class Server(EventManager, Generic[ConnectionT]):
                 )
 
                 self._connected = True
+                if self._stop_events:
+                    self._stop_events = False
 
                 # Signal that we are ready to start accepting connections
                 self.dispatch('ready')
@@ -176,21 +178,18 @@ class Server(EventManager, Generic[ConnectionT]):
     async def close(self) -> Self:
         """Close the server along with any open connections.
 
-        Note that the ``close`` event is triggered by :meth:`.disconnect`,
-        not this method.
-
         This method is idemponent.
         """
-        coros: List[Coroutine[Any, Any, Any]] = []
-
         if self.connected:
-            coros.append(self.disconnect())
+            await self.disconnect()
 
         if len(self._connections):
+            coros: List[Coroutine[Any, Any, Any]] = []
+
             for connection in self._connections:
+                connection._stop_events = True
                 coros.append(connection.close())
 
-        if len(coros):
             await gather(*coros)
 
         return self
@@ -209,8 +208,6 @@ class Server(EventManager, Generic[ConnectionT]):
             server.close()
 
             await server.wait_closed()
-
-            self.dispatch('close')
 
         return self
 
@@ -242,9 +239,6 @@ class Server(EventManager, Generic[ConnectionT]):
     if TYPE_CHECKING:
 
         def on_ready(self) -> ...:
-            ...
-
-        def on_close(self) -> ...:
             ...
 
         def on_connect(self, connection: ConnectionT) -> ...:

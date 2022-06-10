@@ -86,6 +86,9 @@ class EventManager:
 
     if TYPE_CHECKING:
         _listeners: Dict[str, List[Callable[..., Any]]]
+        _stop_events: bool
+
+    _stop_events = False
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -163,6 +166,8 @@ class EventManager:
 
     def _schedule_listener(self, listener: Callable[..., Any], *args: Any) -> None:
         """Wrap a listener in an asyncio task and schedule for it to be called soon."""
+        if self._stop_events:
+            return
         task(self._wrap_listener(listener, *args))
 
     async def _wrap_listener(self, listener: Callable[..., Any], *args: Any) -> None:

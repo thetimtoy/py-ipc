@@ -11,10 +11,6 @@ class MyServer(ipc.Server):
         """Fired when the server is ready."""
         print('Server is ready.')
 
-    def on_close(self):
-        """Fired when the server is closed."""
-        print('Server closed.')
-
     async def on_connect(self, conn):
         """Fired when an incoming connection has been established."""
         print(f'Connection {conn} opened.')
@@ -43,3 +39,5 @@ server = MyServer()
 
 # Run the server and let the library manage the event loop
 server.connect(run_sync=True)
+
+print('Server closed.')
