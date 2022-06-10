@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sys import version_info
 from asyncio import get_running_loop
 from inspect import isawaitable
 from typing import TYPE_CHECKING
@@ -46,6 +47,8 @@ except ImportError:
 _json_dumps = json.dumps
 _json_loads = json.loads
 
+_HAS_TASK_NAMES = version_info >= (3, 8)
+
 
 def json_dumps(obj: Any) -> bytes:
     ret = _json_dumps(obj)
@@ -61,8 +64,13 @@ def future() -> Future[Any]:
     return get_running_loop().create_future()
 
 
-def task(coro: Coroutine[Any, Any, T]) -> Task[T]:
-    return get_running_loop().create_task(coro)
+def task(coro: Coroutine[Any, Any, T], name: str | None = None) -> Task[T]:
+    create_task = get_running_loop().create_task
+
+    if _HAS_TASK_NAMES:
+        return create_task(coro, name=name)  # type: ignore
+
+    return create_task(coro)
 
 
 async def maybe_awaitable(
