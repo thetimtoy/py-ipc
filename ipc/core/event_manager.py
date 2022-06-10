@@ -5,6 +5,7 @@ from asyncio import (
     TimeoutError,
     wait_for,
 )
+from logging import getLogger
 from sys import stderr
 from traceback import print_exc
 from typing import TYPE_CHECKING
@@ -32,6 +33,7 @@ if TYPE_CHECKING:
 __all__ = ('EventManager',)
 
 _ROOT_LISTENER = lambda *_: None
+_LOGGER = getLogger(__name__)
 
 
 def _ensure_string(text: str, param: Optional[str] = 'event') -> None:
@@ -126,7 +128,7 @@ class EventManager:
                     try:
                         fut: Future[Any] = listener.__ipc_event_waiter__
                     except AttributeError:
-                        self._schedule_listener(listener, *args)
+                        self._schedule_listener(event, listener, *args)
                     else:
                         if not fut.done():
                             try:
@@ -160,17 +162,42 @@ class EventManager:
             _ensure_callable(root_listener, f'self.on_{event}')
 
             if event == 'error':
-                task(self._handle_error(*args))
+                handle_errors = False
             else:
-                self._schedule_listener(root_listener, *args)
+                handle_errors = True
 
-    def _schedule_listener(self, listener: Callable[..., Any], *args: Any) -> None:
+            self._schedule_listener(
+                event, root_listener, *args, handle_errors=handle_errors
+            )
+
+    def _schedule_listener(
+        self,
+        event: str,
+        listener: Callable[..., Any],
+        *args: Any,
+        handle_errors: bool = True,
+    ) -> None:
         """Wrap a listener in an asyncio task and schedule for it to be called soon."""
         if self._stop_events:
+            _LOGGER.debug(
+                f'Not dispatching event "{event}", as events have been stopped for {self}'
+            )
             return
-        task(self._wrap_listener(listener, *args))
 
-    async def _wrap_listener(self, listener: Callable[..., Any], *args: Any) -> None:
+        msg = f'Dispatching event "{event}"'
+        if not handle_errors:
+            msg += ' without error handling,'
+        msg += f' with args {args} for {self}'
+        _LOGGER.debug(msg)
+
+        task(
+            self._wrap_listener(listener, *args, handle_errors=handle_errors),
+            name=f'py-ipc event: {event}',
+        )
+
+    async def _wrap_listener(
+        self, listener: Callable[..., Any], *args: Any, handle_errors: bool
+    ) -> None:
         """Run the ``listener`` callable and handle if an :class:`Exception` is raised.
 
         If ``listener`` returns an awaitable, this method returns once that awaitable returns.
@@ -178,12 +205,14 @@ class EventManager:
         try:
             await maybe_awaitable(listener, *args)
         except Exception as exc:
-            await self._handle_error(exc, *args)
+            if handle_errors:
+                await self._handle_error(exc, *args)
+            else:
+                raise exc
 
     async def _handle_error(self, exc: Exception, *args: Any) -> None:
         """Call :meth:`.on_error` with the given arguments."""
         await maybe_awaitable(self.on_error, exc, *args)
-
     # Managing listeners
 
     def listener(self, event: str, *, root: bool = False) -> Callable[[FuncT], FuncT]:
