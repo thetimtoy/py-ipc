@@ -25,7 +25,13 @@ if TYPE_CHECKING:
     T = TypeVar('T')
 
 
-__all__ = ('Client',)
+__all__ = ('Client','invoke',)
+
+
+async def invoke(host: str, port: int, command: str, *args: Any) -> Any:
+    client = Client(host, port)
+    await client.connect()
+    return await client.invoke(command, *args)
 
 
 class Client(BaseClient):
