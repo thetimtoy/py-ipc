@@ -7,8 +7,8 @@ from typing import (
     overload,
 )
 
+from ipc.core.connection import Connection
 from ipc.core.server import Server as BaseServer
-from ipc.core.types import ConnectionT
 from ipc.core.utils import NULL
 from ipc.rpc.context import Context
 from ipc.rpc.errors import CommandAlreadyRegistered
@@ -19,7 +19,6 @@ if TYPE_CHECKING:
         Any,
         Callable,
         Dict,
-        Optional,
         Union,
         TypeVar,
     )
@@ -35,7 +34,7 @@ if TYPE_CHECKING:
 __all__ = ('Server',)
 
 
-class Server(BaseServer[ConnectionT]):
+class Server(BaseServer):
     if TYPE_CHECKING:
         commands: Dict[str, CommandFunc]
 
@@ -45,7 +44,7 @@ class Server(BaseServer[ConnectionT]):
         port: int,
         *,
         commands: Dict[str, CommandFunc] = NULL,
-        connection_factory: Callable[[Server], ConnectionT] = NULL,
+        connection_factory: Callable[[Server], Connection] = Connection,
     ) -> None:
         super().__init__(host, port, connection_factory=connection_factory)  # type: ignore
 
@@ -59,15 +58,15 @@ class Server(BaseServer[ConnectionT]):
             'It should look like "@register()", not "@register".'
         )
 
-    async def on_message(self, connection: ConnectionT, data: Any) -> None:
+    async def on_message(self, connection: Connection, data: Any) -> None:
         await self.handle_command(connection, data)
 
     async def handle_command(
         self,
-        connection: ConnectionT,
+        connection: Connection,
         data: Any,
         *,
-        factory: Callable[[Self, ConnectionT, Any], Context] = Context,
+        factory: Callable[[Self, Connection, Any], Context] = Context,
     ) -> None:
         if not is_command(data):
             return

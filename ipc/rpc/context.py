@@ -2,11 +2,9 @@ from __future__ import annotations
 
 from typing import (
     TYPE_CHECKING,
-    Generic,
     TypeVar,
 )
 
-from ipc.core.types import ConnectionT
 from ipc.core.utils import maybe_awaitable
 from ipc.rpc.errors import (
     CommandError,
@@ -33,13 +31,8 @@ if TYPE_CHECKING:
 __all__ = ('Context',)
 
 
-ServerT = TypeVar('ServerT', bound='Server')
-
-
-class Context(Generic[ServerT, ConnectionT]):
+class Context:
     if TYPE_CHECKING:
-        connection: ConnectionT
-        server: ServerT
         _nonce: int
         args: List[str]
         command: Optional[CommandFunc]
@@ -50,7 +43,10 @@ class Context(Generic[ServerT, ConnectionT]):
     _responded = False
 
     def __init__(
-        self, server: ServerT, connection: Connection, data: CommandData
+        self,
+        server: Server,
+        connection: Connection,
+        data: CommandData,
     ) -> None:
         self.connection = connection
         self.server = server

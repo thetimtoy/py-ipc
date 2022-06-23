@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from ipc.core.errors import NotConnected
@@ -29,6 +30,11 @@ if TYPE_CHECKING:
 __all__ = ('BaseConnection',)
 
 _WHITESPACE = b' '
+_LOGGER = getLogger(__name__)
+
+
+def _repr_prefix(c: BaseConnection) -> str:
+    return f'Connection {hex(id(c))}'
 
 
 class BaseConnection(EventManager):
@@ -126,6 +132,9 @@ class BaseConnection(EventManager):
                 self._write_buffer = bytearray()
 
             self._write_buffer.extend(to_send)
+            _LOGGER.debug(
+                f'{_repr_prefix(self)}: buffering data as the transport is paused'
+            )
 
         else:
             self._transport.write(to_send)
@@ -201,10 +210,14 @@ class BaseConnection(EventManager):
 
     def _protocol_cb_eof_received(self) -> bool:
         """Called when eof is received."""
+        _LOGGER.debug(f'{_repr_prefix(self)}: eof received..?')
         return False
 
     def _protocol_cb_pause_writing(self) -> None:
         """Called when the transport's write buffer is too large."""
+        _LOGGER.debug(
+            f'{_repr_prefix(self)}: pausing writes as write buffer is too large'
+        )
         self._paused = True
 
     def _protocol_cb_resume_writing(self) -> None:
@@ -212,8 +225,12 @@ class BaseConnection(EventManager):
         drained and can be written to.
         """
         self._paused = False
+        _LOGGER.debug(
+            f'{_repr_prefix(self)}: write buffer has been drained, writes resumed'
+        )
 
         if self._write_buffer is not None:
             self._transport.write(self._write_buffer)
+            _LOGGER.debug(f'{_repr_prefix(self)}: buffered data has been written')
 
             self._write_buffer.clear()

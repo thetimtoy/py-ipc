@@ -9,13 +9,10 @@ from asyncio import (
 from typing import (
     TYPE_CHECKING,
     Callable,
-    Generic,
 )
 
 from ipc.core.connection import Connection
 from ipc.core.event_manager import EventManager
-from ipc.core.types import ConnectionT
-from ipc.core.utils import NULL
 
 if TYPE_CHECKING:
     from asyncio import AbstractServer
@@ -39,14 +36,14 @@ if TYPE_CHECKING:
 __all__ = ('Server',)
 
 
-class Server(EventManager, Generic[ConnectionT]):
+class Server(EventManager):
     if TYPE_CHECKING:
         host: str
         port: int
         _connected: bool
-        _connections: List[ConnectionT]
+        _connections: List[Connection]
         _server: AbstractServer
-        connection_factory: Callable[[Server], ConnectionT]
+        connection_factory: Callable[[Server], Connection]
 
     _connected = False
 
@@ -55,7 +52,7 @@ class Server(EventManager, Generic[ConnectionT]):
         host: str,
         port: int,
         *,
-        connection_factory: Callable[[Server], ConnectionT] = NULL,
+        connection_factory: Callable[[Server], Connection] = Connection,
     ) -> None:
         super().__init__()
 
@@ -126,9 +123,6 @@ class Server(EventManager, Generic[ConnectionT]):
 
         def factory() -> Protocol:
             factory = self.connection_factory
-
-            if factory is NULL:
-                factory = Connection
 
             connection = factory(self)
 
@@ -217,13 +211,13 @@ class Server(EventManager, Generic[ConnectionT]):
         return self._connected
 
     @property
-    def connections(self) -> List[ConnectionT]:
+    def connections(self) -> List[Connection]:
         """A list of open connections leased by this server."""
         return self._connections.copy()
 
     # Default event listeners
 
-    def on_disconnect(self, connection: ConnectionT, exc: Optional[Exception]) -> None:
+    def on_disconnect(self, connection: Connection, exc: Optional[Exception]) -> None:
         """The default ``disconnect`` event listener.
 
         If ``exc`` is not ``None``, it is propagated to :meth:`.on_error`.
@@ -242,8 +236,8 @@ class Server(EventManager, Generic[ConnectionT]):
         def on_ready(self) -> ...:
             ...
 
-        def on_connect(self, connection: ConnectionT) -> ...:
+        def on_connect(self, connection: Connection) -> ...:
             ...
 
-        def on_message(self, connection: ConnectionT, data: Any) -> ...:
+        def on_message(self, connection: Connection, data: Any) -> ...:
             ...
