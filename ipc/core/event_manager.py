@@ -204,6 +204,8 @@ class EventManager:
         """
         try:
             await maybe_awaitable(listener, *args)
+        except CancelledError:
+            pass
         except Exception as exc:
             if handle_errors:
                 await self._handle_error(exc, *args)
